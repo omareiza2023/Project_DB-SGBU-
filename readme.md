@@ -26,20 +26,25 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 
 | Archivo/Carpeta | Descripción |
 | :-------------- | :---------- |
-| `/scripts/CTES.md` | Consultas optimizadas utilizando expresiones comunes (CTE). |
-| `/scripts/Functions.md` | Funciones definidas por el usuario para operaciones específicas. |
-| `/scripts/Index.md` | Índices aplicados para mejorar el rendimiento en búsquedas. |
-| `/scripts/Inserts.md` | Ejemplos de inserción de datos en las tablas principales. |
+| `/consultas/consultas_subconsultas.sql` | Consultas utilizando subconsultas para diferentes operaciones. |
+| `/consultas/CTES.sql` | Consultas optimizadas utilizando expresiones comunes (CTEs). |
+| `/consultas/funciones.sql` | Funciones SQL específicas para operaciones en la base de datos. |
+| `/consultas/indices.sql` | Definición de índices para optimización de consultas. |
+| `/consultas/vistas.sql` | Creación de vistas para consultas consolidadas. |
+| `/scripts/CTES.md` | Documentación de consultas optimizadas utilizando expresiones comunes (CTE). |
+| `/scripts/Functions.md` | Documentación de funciones definidas por el usuario. |
+| `/scripts/Index.md` | Documentación de los índices implementados. |
+| `/scripts/Inserts.md` | Ejemplos de inserción de datos. |
 | `/scripts/Security_and_acces.md` | Definición de roles, permisos y medidas de seguridad. |
-| `/scripts/StoredProcedure.md` | Procedimientos almacenados (CRUD y otras lógicas del sistema). |
-| `/scripts/Tables.md` | Estructura detallada de todas las tablas del modelo. |
-| `/scripts/Triggers.md` | Triggers para auditoría y automatización de eventos. |
-| `/scripts/View.md` | Vistas creadas para facilitar el acceso a datos consolidados. |
-| `modelo/ModeloRelacional.drawdb` | Modelo relacional del sistema (DrawDB). |
-|funciones y triggers. |
-
+| `/scripts/StoredProcedure.md` | Procedimientos almacenados del sistema. |
+| `/scripts/Tables.md` | Estructura y detalles de todas las tablas. |
+| `/scripts/Triggers.md` | Definición de triggers implementados. |
+| `/scripts/View.md` | Documentación de vistas creadas. |
+| `/modelo/ModeloRelacional.drawdb` | Archivo del modelo relacional (DrawDB). |
 | `/documentacion/DiccionarioDatos.xlsx` | Diccionario de datos de todas las tablas. |
-| `/documentacion/PresentacionProyecto.pptx` | Presentación resumen del proyecto (10 diapositivas). |
+| `/documentacion/PresentacionProyecto.pptx` | Presentación general del proyecto (10 diapositivas). |
+| `/Backup_project_DB_II` | Backup de la base de datos en general |
+
 ---
 
 ## Funcionalidades Principales
@@ -62,7 +67,3 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 
    ```bash
    docker-compose up -d
-   
-   ```
-
-

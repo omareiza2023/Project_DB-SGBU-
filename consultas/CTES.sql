@@ -1,9 +1,8 @@
-
--- CTE 1: Listar socios con multas pendientes mayores a $5
+-- 1. CTE 1: Listar socios con multas pendientes mayores a $5
 WITH socios_con_multas AS (
     SELECT id_socio, SUM(monto) AS total_multa
     FROM multa
-    WHERE estado = 'pendiente'
+    WHERE estado = 'Pendiente'
     GROUP BY id_socio
 )
 SELECT 
@@ -14,13 +13,13 @@ FROM socios_con_multas sm
 INNER JOIN socio s ON sm.id_socio = s.id_socio
 INNER JOIN persona p ON s.id_persona = p.id_persona
 WHERE sm.total_multa > 5;
+-- Usamos el CTE 'socios_con_multas' para agrupar las multas pendientes por socio, y luego listamos aquellos socios cuyo total de multa es mayor a 5.
 
-
--- CTE 2: Listar libros con al menos 2 copias disponibles
+-- 2. CTE 2: Listar libros con al menos 2 copias disponibles
 WITH libros_con_copias AS (
     SELECT id_libro, COUNT(*) AS copias_disponibles
     FROM copia
-    WHERE estado = 'disponible'
+    WHERE estado = 'Disponible'
     GROUP BY id_libro
 )
 SELECT 
@@ -29,3 +28,4 @@ SELECT
 FROM libros_con_copias lc
 INNER JOIN libro l ON lc.id_libro = l.id_libro
 WHERE lc.copias_disponibles >= 2;
+-- Usamos el CTE 'libros_con_copias' para contar cuántas copias disponibles tiene cada libro y luego listamos aquellos libros que tienen al menos 2 copias disponibles.
