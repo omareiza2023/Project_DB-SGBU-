@@ -26,11 +26,11 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 
 | Archivo/Carpeta | Descripción |
 | :-------------- | :---------- |
-| `/consultas/consultas_subconsultas.sql` | Consultas utilizando subconsultas para diferentes operaciones. |
-| `/consultas/CTES.sql` | Consultas optimizadas utilizando expresiones comunes (CTEs). |
-| `/consultas/funciones.sql` | Funciones SQL específicas para operaciones en la base de datos. |
-| `/consultas/indices.sql` | Definición de índices para optimización de consultas. |
-| `/consultas/vistas.sql` | Creación de vistas para consultas consolidadas. |
+| `/manual_practico_db_sql/consultas_subconsultas.sql` | Consultas utilizando subconsultas para diferentes operaciones. |
+| `/manual_practico_db_sql/CTES.sql` | Consultas optimizadas utilizando expresiones comunes (CTEs). |
+| `/manual_practico_db_sql/funciones.sql` | Funciones SQL específicas para operaciones en la base de datos. |
+| `/manual_practico_db_sql/indices.sql` | Definición de índices para optimización de consultas. |
+| `/manual_practico_db_sql/vistas.sql` | Creación de vistas para consultas consolidadas. |
 | `/scripts/CTES.md` | Documentación de consultas optimizadas utilizando expresiones comunes (CTE). |
 | `/scripts/Functions.md` | Documentación de funciones definidas por el usuario. |
 | `/scripts/Index.md` | Documentación de los índices implementados. |
@@ -40,9 +40,9 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 | `/scripts/Tables.md` | Estructura y detalles de todas las tablas. |
 | `/scripts/Triggers.md` | Definición de triggers implementados. |
 | `/scripts/View.md` | Documentación de vistas creadas. |
-| `/modelo/ModeloRelacional.drawdb` | Archivo del modelo relacional (DrawDB). |
 | `/documentacion/DiccionarioDatos.xlsx` | Diccionario de datos de todas las tablas. |
 | `/documentacion/PresentacionProyecto.pptx` | Presentación general del proyecto (10 diapositivas). |
+| `/documentacion/Evidencias.md` | Evidencias de funcionalidad |
 | `/Backup_project_DB_II` | Backup de la base de datos en general |
 
 ---

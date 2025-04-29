@@ -5,7 +5,7 @@ SELECT * FROM vista_libros_prestados;
 SELECT * FROM vista_libros_prestados WHERE id_socio = 3;
 
 -- Consultar todos los socios que tienen multas pendientes usando la vista vista_socios_con_multas_pendientes
-SELECT * FROM vista_socios_con_multas_pendientes;
+
 
 -- Consultar las multas pendientes mayores a $10.000 usando la vista vista_socios_con_multas_pendientes
 SELECT * FROM vista_socios_con_multas_pendientes WHERE monto > 10000;
