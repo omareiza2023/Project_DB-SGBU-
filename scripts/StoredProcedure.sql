@@ -1,4 +1,4 @@
-```sql
+
 -- 1. Tabla persona
 CREATE OR REPLACE PROCEDURE sp_insert_persona(
     p_nombre VARCHAR,
@@ -483,6 +483,3 @@ BEGIN
     DELETE FROM multa WHERE id_multa = p_id_multa;
 END;
 $$;
-
-
-```

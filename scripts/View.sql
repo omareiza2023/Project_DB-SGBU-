@@ -1,4 +1,4 @@
-```sql
+
 -- 1. Vista: Libros actualmente prestados
 CREATE OR REPLACE VIEW vista_libros_prestados AS
 SELECT 
@@ -88,5 +88,3 @@ JOIN libro l ON c.id_libro = l.id_libro
 ORDER BY 
     hp.fecha_prestamo DESC;
 
-
-```

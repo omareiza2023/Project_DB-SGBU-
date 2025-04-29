@@ -1,4 +1,4 @@
-```sql
+
 -- 1. Tabla persona (superclase para todos)
 CREATE TABLE persona (
     id_persona SERIAL PRIMARY KEY,
@@ -131,5 +131,3 @@ CREATE TABLE auditoria_general (
     datos_anteriores JSONB,
     datos_nuevos JSONB
 );
-
-```

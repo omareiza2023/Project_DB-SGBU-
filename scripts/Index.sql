@@ -1,4 +1,4 @@
-```sql
+
 -- Índices para optimizar búsquedas y relaciones
 -- Tabla persona
 CREATE INDEX idx_persona_nombre ON persona (nombre);
@@ -57,5 +57,3 @@ CREATE INDEX idx_historial_idcopia ON historial_prestamo (id_copia);
 CREATE INDEX idx_auditoria_tabla ON auditoria_general (tabla_afectada);
 CREATE INDEX idx_auditoria_fecha ON auditoria_general (fecha);
 
-
-```

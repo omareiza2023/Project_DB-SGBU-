@@ -6,6 +6,7 @@
 - [Contenidos del Repositorio](#contenidos-del-repositorio)
 - [Funcionalidades Principales](#funcionalidades-principales)
 - [Ejecución del Proyecto](#ejecución-del-proyecto)
+- [Créditos del Proyecto](#créditos-del-proyecto)
 
 ---
 
@@ -17,22 +18,28 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 - PostgreSQL como sistema gestor de base de datos.
 - Docker para la gestión y ejecución del ambiente de bases de datos.
 
+> **Nota:** Todo el contenido del proyecto está desarrollado y almacenado directamente en la rama `main`. No se utilizan ramas adicionales. Cualquier mención o referencia a otras ramas dentro de los documentos o scripts debe considerarse incorrecta.
+
 ---
 
 ## Contenidos del Repositorio
 
 | Archivo/Carpeta | Descripción |
 | :-------------- | :---------- |
-| `/modelo/ModeloRelacional.drawdb` | Archivo con el diseño del modelo relacional de la base de datos en formato DrawDB. Incluye más de 15 tablas principales y sus relaciones. |
-| `/scripts/CreacionTablas.sql` | Script SQL para la creación de todas las tablas, relaciones, restricciones y objetos de la base de datos. |
-| `/scripts/InsercionDatos.sql` | Script SQL con datos de ejemplo (mínimo 5 registros por tabla relevante) para poblar la base de datos. |
-| `/scripts/ProcedimientosFuncionesTriggers.sql` | Script que contiene la creación de procedimientos almacenados (CRUD), funciones definidas por el usuario y triggers de auditoría. |
-| `/scripts/ConsultasOptimización.sql` | Archivo SQL con consultas avanzadas, subconsultas y optimizaciones usando CTEs (Common Table Expressions). |
-| `/documentacion/DiccionarioDatos.xlsx` | Documento Excel que detalla cada tabla, sus atributos, tipos de datos, llaves primarias, foráneas y descripciones. |
-| `/documentacion/PresentacionProyecto.pptx` | Presentación resumen del proyecto (máximo 10 diapositivas) cubriendo contexto, estructura de la BD, optimización, seguridad, y conclusiones. |
-| `/docker-compose.yml` | Archivo de configuración para levantar la base de datos PostgreSQL utilizando Docker. |
-| `/README.md` | Archivo de descripción general del proyecto (este documento). |
+| `/scripts/CTES.md` | Consultas optimizadas utilizando expresiones comunes (CTE). |
+| `/scripts/Functions.md` | Funciones definidas por el usuario para operaciones específicas. |
+| `/scripts/Index.md` | Índices aplicados para mejorar el rendimiento en búsquedas. |
+| `/scripts/Inserts.md` | Ejemplos de inserción de datos en las tablas principales. |
+| `/scripts/Security_and_acces.md` | Definición de roles, permisos y medidas de seguridad. |
+| `/scripts/StoredProcedure.md` | Procedimientos almacenados (CRUD y otras lógicas del sistema). |
+| `/scripts/Tables.md` | Estructura detallada de todas las tablas del modelo. |
+| `/scripts/Triggers.md` | Triggers para auditoría y automatización de eventos. |
+| `/scripts/View.md` | Vistas creadas para facilitar el acceso a datos consolidados. |
+| `modelo/ModeloRelacional.drawdb` | Modelo relacional del sistema (DrawDB). |
+|funciones y triggers. |
 
+| `/documentacion/DiccionarioDatos.xlsx` | Diccionario de datos de todas las tablas. |
+| `/documentacion/PresentacionProyecto.pptx` | Presentación resumen del proyecto (10 diapositivas). |
 ---
 
 ## Funcionalidades Principales
@@ -55,3 +62,7 @@ Este proyecto consiste en el diseño, desarrollo e implementación de una base d
 
    ```bash
    docker-compose up -d
+   
+   ```
+
+

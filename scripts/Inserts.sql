@@ -1,4 +1,3 @@
-```sql
 -- 1. persona
 INSERT INTO persona (nombre, apellido, correo, telefono, direccion) VALUES
 ('Juan', 'Pérez', 'juan.perez@mail.com', '123456789', 'Calle 1, Ciudad'),
@@ -127,5 +126,3 @@ INSERT INTO historial_prestamo (id_socio, id_copia, fecha_prestamo, fecha_devolu
 (5, 5, '2023-04-01', NULL, 'Préstamo activo');
 
 -- tabla 15 y 16 no requieren inserciones ya que ellas se llenan en funcion de las otras tablas:
-
-```
