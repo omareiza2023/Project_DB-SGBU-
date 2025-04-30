@@ -40,8 +40,8 @@ Cada vez que se realiza una reserva nueva, se registra automáticamente en la ta
 
 Se ejecutaron consultas utilizando Common Table Expressions (CTEs) para validar su funcionamiento y legibilidad.
 
-![vista 1](Project_DB-SGBU-/documentacion/img/vista1.png)
-![vista 2](Project_DB-SGBU-/documentacion/img/vista2.png)
+![vista 1](/documentacion/img/vista1.png)
+![vista 2](/documentacion/img/vista2.png)
 
 ---
 
