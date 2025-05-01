@@ -5,7 +5,7 @@
 -- Dumped from database version 17.2 (Debian 17.2-1.pgdg120+1)
 -- Dumped by pg_dump version 17.2
 
--- Started on 2025-04-29 00:54:52 UTC
+-- Started on 2025-05-01 17:23:09 UTC
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -139,6 +139,36 @@ $$;
 ALTER FUNCTION public.contar_prestamos_libro(id_libro integer) OWNER TO grupo2;
 
 --
+-- TOC entry 319 (class 1255 OID 58522)
+-- Name: eliminar_multa_y_prestamo(integer); Type: FUNCTION; Schema: public; Owner: grupo2
+--
+
+CREATE FUNCTION public.eliminar_multa_y_prestamo(prestamo_id integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    multa_rec RECORD;
+BEGIN
+    -- Eliminar la multa asociada al préstamo
+    FOR multa_rec IN
+        SELECT m.id_multa, m.id_prestamo
+        FROM multa m
+        WHERE m.id_prestamo = prestamo_id  -- Usamos la nueva variable prestamo_id
+    LOOP
+        -- Eliminar la multa
+        DELETE FROM multa WHERE id_multa = multa_rec.id_multa;
+    END LOOP;
+
+    -- Eliminar el préstamo
+    DELETE FROM prestamo WHERE id_prestamo = prestamo_id; -- Usamos la nueva variable prestamo_id
+       
+END;
+$$;
+
+
+ALTER FUNCTION public.eliminar_multa_y_prestamo(prestamo_id integer) OWNER TO grupo2;
+
+--
 -- TOC entry 305 (class 1255 OID 58489)
 -- Name: fn_auditoria_general(); Type: FUNCTION; Schema: public; Owner: grupo2
 --
@@ -182,6 +212,47 @@ $$;
 
 
 ALTER FUNCTION public.fn_auditoria_general() OWNER TO grupo2;
+
+--
+-- TOC entry 318 (class 1255 OID 58514)
+-- Name: generar_multas_por_retraso(); Type: FUNCTION; Schema: public; Owner: grupo2
+--
+
+CREATE FUNCTION public.generar_multas_por_retraso() RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+    prestamo_rec RECORD;
+    dias_retraso INT;
+BEGIN
+    FOR prestamo_rec IN
+        SELECT p.id_prestamo, p.id_socio, p.fecha_devolucion_esperada
+        FROM prestamo p
+        WHERE p.fecha_devolucion_esperada < CURRENT_DATE
+        AND p.id_socio NOT IN (
+            SELECT m.id_socio
+            FROM multa m
+            WHERE m.estado = 'Pendiente'
+        )
+    LOOP
+        -- Calcular el número de días de retraso
+        dias_retraso := CURRENT_DATE - prestamo_rec.fecha_devolucion_esperada;
+        
+        -- Generar la multa
+        INSERT INTO multa (id_socio, monto, motivo, fecha, estado)
+        VALUES (
+            prestamo_rec.id_socio,
+            dias_retraso * 5.00,  -- Ejemplo: $5 por cada día de retraso
+            'Retraso en la devolución del préstamo',
+            CURRENT_DATE,
+            'Pendiente'
+        );
+    END LOOP;
+END;
+$_$;
+
+
+ALTER FUNCTION public.generar_multas_por_retraso() OWNER TO grupo2;
 
 --
 -- TOC entry 315 (class 1255 OID 58511)
@@ -1040,7 +1111,7 @@ CREATE SEQUENCE public.auditoria_general_id_auditoria_seq
 ALTER SEQUENCE public.auditoria_general_id_auditoria_seq OWNER TO grupo2;
 
 --
--- TOC entry 3666 (class 0 OID 0)
+-- TOC entry 3668 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: auditoria_general_id_auditoria_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1079,7 +1150,7 @@ CREATE SEQUENCE public.autor_id_autor_seq
 ALTER SEQUENCE public.autor_id_autor_seq OWNER TO grupo2;
 
 --
--- TOC entry 3668 (class 0 OID 0)
+-- TOC entry 3671 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: autor_id_autor_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1118,7 +1189,7 @@ CREATE SEQUENCE public.categoria_id_categoria_seq
 ALTER SEQUENCE public.categoria_id_categoria_seq OWNER TO grupo2;
 
 --
--- TOC entry 3670 (class 0 OID 0)
+-- TOC entry 3674 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: categoria_id_categoria_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1159,7 +1230,7 @@ CREATE SEQUENCE public.copia_id_copia_seq
 ALTER SEQUENCE public.copia_id_copia_seq OWNER TO grupo2;
 
 --
--- TOC entry 3672 (class 0 OID 0)
+-- TOC entry 3677 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: copia_id_copia_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1199,7 +1270,7 @@ CREATE SEQUENCE public.devolucion_id_devolucion_seq
 ALTER SEQUENCE public.devolucion_id_devolucion_seq OWNER TO grupo2;
 
 --
--- TOC entry 3674 (class 0 OID 0)
+-- TOC entry 3680 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: devolucion_id_devolucion_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1237,7 +1308,7 @@ CREATE SEQUENCE public.editorial_id_editorial_seq
 ALTER SEQUENCE public.editorial_id_editorial_seq OWNER TO grupo2;
 
 --
--- TOC entry 3676 (class 0 OID 0)
+-- TOC entry 3683 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: editorial_id_editorial_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1279,7 +1350,7 @@ CREATE SEQUENCE public.historial_prestamo_id_historial_seq
 ALTER SEQUENCE public.historial_prestamo_id_historial_seq OWNER TO grupo2;
 
 --
--- TOC entry 3678 (class 0 OID 0)
+-- TOC entry 3686 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: historial_prestamo_id_historial_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1319,7 +1390,7 @@ CREATE SEQUENCE public.inventario_id_inventario_seq
 ALTER SEQUENCE public.inventario_id_inventario_seq OWNER TO grupo2;
 
 --
--- TOC entry 3680 (class 0 OID 0)
+-- TOC entry 3689 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: inventario_id_inventario_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1373,7 +1444,7 @@ CREATE SEQUENCE public.libro_autor_id_libro_autor_seq
 ALTER SEQUENCE public.libro_autor_id_libro_autor_seq OWNER TO grupo2;
 
 --
--- TOC entry 3683 (class 0 OID 0)
+-- TOC entry 3693 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: libro_autor_id_libro_autor_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1398,7 +1469,7 @@ CREATE SEQUENCE public.libro_id_libro_seq
 ALTER SEQUENCE public.libro_id_libro_seq OWNER TO grupo2;
 
 --
--- TOC entry 3684 (class 0 OID 0)
+-- TOC entry 3695 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: libro_id_libro_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1418,6 +1489,7 @@ CREATE TABLE public.multa (
     motivo text,
     fecha date NOT NULL,
     estado character varying(50) NOT NULL,
+    id_prestamo integer,
     CONSTRAINT multa_monto_check CHECK ((monto >= (0)::numeric))
 );
 
@@ -1441,7 +1513,7 @@ CREATE SEQUENCE public.multa_id_multa_seq
 ALTER SEQUENCE public.multa_id_multa_seq OWNER TO grupo2;
 
 --
--- TOC entry 3686 (class 0 OID 0)
+-- TOC entry 3698 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: multa_id_multa_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1483,7 +1555,7 @@ CREATE SEQUENCE public.persona_id_persona_seq
 ALTER SEQUENCE public.persona_id_persona_seq OWNER TO grupo2;
 
 --
--- TOC entry 3688 (class 0 OID 0)
+-- TOC entry 3701 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: persona_id_persona_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1522,7 +1594,7 @@ CREATE SEQUENCE public.personal_biblioteca_id_personal_seq
 ALTER SEQUENCE public.personal_biblioteca_id_personal_seq OWNER TO grupo2;
 
 --
--- TOC entry 3690 (class 0 OID 0)
+-- TOC entry 3704 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: personal_biblioteca_id_personal_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1563,7 +1635,7 @@ CREATE SEQUENCE public.prestamo_id_prestamo_seq
 ALTER SEQUENCE public.prestamo_id_prestamo_seq OWNER TO grupo2;
 
 --
--- TOC entry 3692 (class 0 OID 0)
+-- TOC entry 3707 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: prestamo_id_prestamo_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1604,7 +1676,7 @@ CREATE SEQUENCE public.reserva_id_reserva_seq
 ALTER SEQUENCE public.reserva_id_reserva_seq OWNER TO grupo2;
 
 --
--- TOC entry 3694 (class 0 OID 0)
+-- TOC entry 3710 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: reserva_id_reserva_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1643,7 +1715,7 @@ CREATE SEQUENCE public.socio_id_socio_seq
 ALTER SEQUENCE public.socio_id_socio_seq OWNER TO grupo2;
 
 --
--- TOC entry 3696 (class 0 OID 0)
+-- TOC entry 3713 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: socio_id_socio_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: grupo2
 --
@@ -1759,7 +1831,7 @@ CREATE VIEW public.vista_socios_con_multas_pendientes AS
 ALTER VIEW public.vista_socios_con_multas_pendientes OWNER TO grupo2;
 
 --
--- TOC entry 3374 (class 2604 OID 58382)
+-- TOC entry 3375 (class 2604 OID 58382)
 -- Name: auditoria_general id_auditoria; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1767,7 +1839,7 @@ ALTER TABLE ONLY public.auditoria_general ALTER COLUMN id_auditoria SET DEFAULT 
 
 
 --
--- TOC entry 3364 (class 2604 OID 58226)
+-- TOC entry 3365 (class 2604 OID 58226)
 -- Name: autor id_autor; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1775,7 +1847,7 @@ ALTER TABLE ONLY public.autor ALTER COLUMN id_autor SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3363 (class 2604 OID 58217)
+-- TOC entry 3364 (class 2604 OID 58217)
 -- Name: categoria id_categoria; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1783,7 +1855,7 @@ ALTER TABLE ONLY public.categoria ALTER COLUMN id_categoria SET DEFAULT nextval(
 
 
 --
--- TOC entry 3367 (class 2604 OID 58269)
+-- TOC entry 3368 (class 2604 OID 58269)
 -- Name: copia id_copia; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1791,7 +1863,7 @@ ALTER TABLE ONLY public.copia ALTER COLUMN id_copia SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3370 (class 2604 OID 58317)
+-- TOC entry 3371 (class 2604 OID 58317)
 -- Name: devolucion id_devolucion; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1799,7 +1871,7 @@ ALTER TABLE ONLY public.devolucion ALTER COLUMN id_devolucion SET DEFAULT nextva
 
 
 --
--- TOC entry 3362 (class 2604 OID 58210)
+-- TOC entry 3363 (class 2604 OID 58210)
 -- Name: editorial id_editorial; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1807,7 +1879,7 @@ ALTER TABLE ONLY public.editorial ALTER COLUMN id_editorial SET DEFAULT nextval(
 
 
 --
--- TOC entry 3373 (class 2604 OID 58363)
+-- TOC entry 3374 (class 2604 OID 58363)
 -- Name: historial_prestamo id_historial; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1815,7 +1887,7 @@ ALTER TABLE ONLY public.historial_prestamo ALTER COLUMN id_historial SET DEFAULT
 
 
 --
--- TOC entry 3368 (class 2604 OID 58285)
+-- TOC entry 3369 (class 2604 OID 58285)
 -- Name: inventario id_inventario; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1823,7 +1895,7 @@ ALTER TABLE ONLY public.inventario ALTER COLUMN id_inventario SET DEFAULT nextva
 
 
 --
--- TOC entry 3365 (class 2604 OID 58233)
+-- TOC entry 3366 (class 2604 OID 58233)
 -- Name: libro id_libro; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1831,7 +1903,7 @@ ALTER TABLE ONLY public.libro ALTER COLUMN id_libro SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3366 (class 2604 OID 58250)
+-- TOC entry 3367 (class 2604 OID 58250)
 -- Name: libro_autor id_libro_autor; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1839,7 +1911,7 @@ ALTER TABLE ONLY public.libro_autor ALTER COLUMN id_libro_autor SET DEFAULT next
 
 
 --
--- TOC entry 3372 (class 2604 OID 58348)
+-- TOC entry 3373 (class 2604 OID 58348)
 -- Name: multa id_multa; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1847,7 +1919,7 @@ ALTER TABLE ONLY public.multa ALTER COLUMN id_multa SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3359 (class 2604 OID 58171)
+-- TOC entry 3360 (class 2604 OID 58171)
 -- Name: persona id_persona; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1855,7 +1927,7 @@ ALTER TABLE ONLY public.persona ALTER COLUMN id_persona SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 3361 (class 2604 OID 58196)
+-- TOC entry 3362 (class 2604 OID 58196)
 -- Name: personal_biblioteca id_personal; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1863,7 +1935,7 @@ ALTER TABLE ONLY public.personal_biblioteca ALTER COLUMN id_personal SET DEFAULT
 
 
 --
--- TOC entry 3369 (class 2604 OID 58300)
+-- TOC entry 3370 (class 2604 OID 58300)
 -- Name: prestamo id_prestamo; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1871,7 +1943,7 @@ ALTER TABLE ONLY public.prestamo ALTER COLUMN id_prestamo SET DEFAULT nextval('p
 
 
 --
--- TOC entry 3371 (class 2604 OID 58331)
+-- TOC entry 3372 (class 2604 OID 58331)
 -- Name: reserva id_reserva; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1879,7 +1951,7 @@ ALTER TABLE ONLY public.reserva ALTER COLUMN id_reserva SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 3360 (class 2604 OID 58182)
+-- TOC entry 3361 (class 2604 OID 58182)
 -- Name: socio id_socio; Type: DEFAULT; Schema: public; Owner: grupo2
 --
 
@@ -1887,7 +1959,7 @@ ALTER TABLE ONLY public.socio ALTER COLUMN id_socio SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3659 (class 0 OID 58379)
+-- TOC entry 3661 (class 0 OID 58379)
 -- Dependencies: 248
 -- Data for Name: auditoria_general; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -1943,11 +2015,19 @@ COPY public.auditoria_general (id_auditoria, tabla_afectada, operacion, usuario,
 48	multa	INSERT	grupo2	2025-04-28 17:50:53.012477	\N	{"fecha": "2025-05-12", "monto": 2000.00, "estado": "Pagada", "motivo": "Retraso leve", "id_multa": 3, "id_socio": 3}
 49	multa	INSERT	grupo2	2025-04-28 17:50:53.012477	\N	{"fecha": "2025-05-13", "monto": 3000.00, "estado": "Pendiente", "motivo": "Daño físico", "id_multa": 4, "id_socio": 4}
 50	multa	INSERT	grupo2	2025-04-28 17:50:53.012477	\N	{"fecha": "2025-05-14", "monto": 1000.00, "estado": "Pagada", "motivo": "Retraso en devolución", "id_multa": 5, "id_socio": 5}
+51	prestamo	INSERT	grupo2	2025-04-30 18:03:48.973659	\N	{"id_copia": 1, "id_socio": 1, "id_prestamo": 6, "fecha_prestamo": "2025-04-10", "fecha_devolucion_esperada": "2025-04-17"}
+52	prestamo	INSERT	grupo2	2025-04-30 18:03:48.973659	\N	{"id_copia": 2, "id_socio": 2, "id_prestamo": 7, "fecha_prestamo": "2025-04-12", "fecha_devolucion_esperada": "2025-04-19"}
+53	prestamo	INSERT	grupo2	2025-04-30 18:03:48.973659	\N	{"id_copia": 3, "id_socio": 3, "id_prestamo": 8, "fecha_prestamo": "2025-04-13", "fecha_devolucion_esperada": "2025-04-18"}
+54	prestamo	INSERT	grupo2	2025-04-30 18:03:48.973659	\N	{"id_copia": 4, "id_socio": 4, "id_prestamo": 9, "fecha_prestamo": "2025-04-14", "fecha_devolucion_esperada": "2025-04-19"}
+55	prestamo	INSERT	grupo2	2025-04-30 18:03:48.973659	\N	{"id_copia": 5, "id_socio": 5, "id_prestamo": 10, "fecha_prestamo": "2025-04-15", "fecha_devolucion_esperada": "2025-04-20"}
+56	multa	INSERT	grupo2	2025-04-30 18:10:14.986955	\N	{"fecha": "2025-04-30", "monto": 60.00, "estado": "Pendiente", "motivo": "Retraso en la devolución del préstamo", "id_multa": 6, "id_socio": 3, "id_prestamo": null}
+57	multa	INSERT	grupo2	2025-04-30 18:10:14.986955	\N	{"fecha": "2025-04-30", "monto": 50.00, "estado": "Pendiente", "motivo": "Retraso en la devolución del préstamo", "id_multa": 7, "id_socio": 5, "id_prestamo": null}
+58	prestamo	DELETE	grupo2	2025-04-30 18:32:01.705889	{"id_copia": 2, "id_socio": 2, "id_prestamo": 7, "fecha_prestamo": "2025-04-12", "fecha_devolucion_esperada": "2025-04-19"}	\N
 \.
 
 
 --
--- TOC entry 3639 (class 0 OID 58223)
+-- TOC entry 3641 (class 0 OID 58223)
 -- Dependencies: 228
 -- Data for Name: autor; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -1962,7 +2042,7 @@ COPY public.autor (id_autor, nombre, nacionalidad) FROM stdin;
 
 
 --
--- TOC entry 3637 (class 0 OID 58214)
+-- TOC entry 3639 (class 0 OID 58214)
 -- Dependencies: 226
 -- Data for Name: categoria; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -1977,7 +2057,7 @@ COPY public.categoria (id_categoria, nombre, descripcion) FROM stdin;
 
 
 --
--- TOC entry 3645 (class 0 OID 58266)
+-- TOC entry 3647 (class 0 OID 58266)
 -- Dependencies: 234
 -- Data for Name: copia; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -1992,7 +2072,7 @@ COPY public.copia (id_copia, id_libro, codigo_barra, estado, ubicacion) FROM std
 
 
 --
--- TOC entry 3651 (class 0 OID 58314)
+-- TOC entry 3653 (class 0 OID 58314)
 -- Dependencies: 240
 -- Data for Name: devolucion; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2007,7 +2087,7 @@ COPY public.devolucion (id_devolucion, id_prestamo, fecha_real_devolucion, estad
 
 
 --
--- TOC entry 3635 (class 0 OID 58207)
+-- TOC entry 3637 (class 0 OID 58207)
 -- Dependencies: 224
 -- Data for Name: editorial; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2022,7 +2102,7 @@ COPY public.editorial (id_editorial, nombre) FROM stdin;
 
 
 --
--- TOC entry 3657 (class 0 OID 58360)
+-- TOC entry 3659 (class 0 OID 58360)
 -- Dependencies: 246
 -- Data for Name: historial_prestamo; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2037,7 +2117,7 @@ COPY public.historial_prestamo (id_historial, id_socio, id_copia, fecha_prestamo
 
 
 --
--- TOC entry 3647 (class 0 OID 58282)
+-- TOC entry 3649 (class 0 OID 58282)
 -- Dependencies: 236
 -- Data for Name: inventario; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2052,7 +2132,7 @@ COPY public.inventario (id_inventario, id_libro, cantidad) FROM stdin;
 
 
 --
--- TOC entry 3641 (class 0 OID 58230)
+-- TOC entry 3643 (class 0 OID 58230)
 -- Dependencies: 230
 -- Data for Name: libro; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2067,7 +2147,7 @@ COPY public.libro (id_libro, titulo, id_editorial, id_categoria) FROM stdin;
 
 
 --
--- TOC entry 3643 (class 0 OID 58247)
+-- TOC entry 3645 (class 0 OID 58247)
 -- Dependencies: 232
 -- Data for Name: libro_autor; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2082,22 +2162,24 @@ COPY public.libro_autor (id_libro_autor, id_libro, id_autor) FROM stdin;
 
 
 --
--- TOC entry 3655 (class 0 OID 58345)
+-- TOC entry 3657 (class 0 OID 58345)
 -- Dependencies: 244
 -- Data for Name: multa; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
 
-COPY public.multa (id_multa, id_socio, monto, motivo, fecha, estado) FROM stdin;
-1	1	5000.00	Retraso en devolución	2025-05-10	Pendiente
-2	2	7000.00	Pérdida de libro	2025-05-11	Pendiente
-3	3	2000.00	Retraso leve	2025-05-12	Pagada
-4	4	3000.00	Daño físico	2025-05-13	Pendiente
-5	5	1000.00	Retraso en devolución	2025-05-14	Pagada
+COPY public.multa (id_multa, id_socio, monto, motivo, fecha, estado, id_prestamo) FROM stdin;
+1	1	5000.00	Retraso en devolución	2025-05-10	Pendiente	\N
+2	2	7000.00	Pérdida de libro	2025-05-11	Pendiente	\N
+3	3	2000.00	Retraso leve	2025-05-12	Pagada	\N
+4	4	3000.00	Daño físico	2025-05-13	Pendiente	\N
+5	5	1000.00	Retraso en devolución	2025-05-14	Pagada	\N
+6	3	60.00	Retraso en la devolución del préstamo	2025-04-30	Pendiente	\N
+7	5	50.00	Retraso en la devolución del préstamo	2025-04-30	Pendiente	\N
 \.
 
 
 --
--- TOC entry 3629 (class 0 OID 58168)
+-- TOC entry 3631 (class 0 OID 58168)
 -- Dependencies: 218
 -- Data for Name: persona; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2112,7 +2194,7 @@ COPY public.persona (id_persona, nombre, apellido, correo, telefono, direccion) 
 
 
 --
--- TOC entry 3633 (class 0 OID 58193)
+-- TOC entry 3635 (class 0 OID 58193)
 -- Dependencies: 222
 -- Data for Name: personal_biblioteca; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2127,7 +2209,7 @@ COPY public.personal_biblioteca (id_personal, id_persona, rol) FROM stdin;
 
 
 --
--- TOC entry 3649 (class 0 OID 58297)
+-- TOC entry 3651 (class 0 OID 58297)
 -- Dependencies: 238
 -- Data for Name: prestamo; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2138,11 +2220,15 @@ COPY public.prestamo (id_prestamo, id_socio, id_copia, fecha_prestamo, fecha_dev
 3	3	3	2025-04-22	2025-05-06
 4	4	4	2025-04-23	2025-05-07
 5	5	5	2025-04-24	2025-05-08
+6	1	1	2025-04-10	2025-04-17
+8	3	3	2025-04-13	2025-04-18
+9	4	4	2025-04-14	2025-04-19
+10	5	5	2025-04-15	2025-04-20
 \.
 
 
 --
--- TOC entry 3653 (class 0 OID 58328)
+-- TOC entry 3655 (class 0 OID 58328)
 -- Dependencies: 242
 -- Data for Name: reserva; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2157,7 +2243,7 @@ COPY public.reserva (id_reserva, id_socio, id_copia, fecha_reserva, estado) FROM
 
 
 --
--- TOC entry 3631 (class 0 OID 58179)
+-- TOC entry 3633 (class 0 OID 58179)
 -- Dependencies: 220
 -- Data for Name: socio; Type: TABLE DATA; Schema: public; Owner: grupo2
 --
@@ -2172,16 +2258,16 @@ COPY public.socio (id_socio, id_persona, tipo_socio) FROM stdin;
 
 
 --
--- TOC entry 3702 (class 0 OID 0)
+-- TOC entry 3720 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: auditoria_general_id_auditoria_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
 
-SELECT pg_catalog.setval('public.auditoria_general_id_auditoria_seq', 50, true);
+SELECT pg_catalog.setval('public.auditoria_general_id_auditoria_seq', 58, true);
 
 
 --
--- TOC entry 3703 (class 0 OID 0)
+-- TOC entry 3721 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: autor_id_autor_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2190,7 +2276,7 @@ SELECT pg_catalog.setval('public.autor_id_autor_seq', 5, true);
 
 
 --
--- TOC entry 3704 (class 0 OID 0)
+-- TOC entry 3722 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: categoria_id_categoria_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2199,7 +2285,7 @@ SELECT pg_catalog.setval('public.categoria_id_categoria_seq', 5, true);
 
 
 --
--- TOC entry 3705 (class 0 OID 0)
+-- TOC entry 3723 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: copia_id_copia_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2208,7 +2294,7 @@ SELECT pg_catalog.setval('public.copia_id_copia_seq', 5, true);
 
 
 --
--- TOC entry 3706 (class 0 OID 0)
+-- TOC entry 3724 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: devolucion_id_devolucion_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2217,7 +2303,7 @@ SELECT pg_catalog.setval('public.devolucion_id_devolucion_seq', 5, true);
 
 
 --
--- TOC entry 3707 (class 0 OID 0)
+-- TOC entry 3725 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: editorial_id_editorial_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2226,7 +2312,7 @@ SELECT pg_catalog.setval('public.editorial_id_editorial_seq', 5, true);
 
 
 --
--- TOC entry 3708 (class 0 OID 0)
+-- TOC entry 3726 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: historial_prestamo_id_historial_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2235,7 +2321,7 @@ SELECT pg_catalog.setval('public.historial_prestamo_id_historial_seq', 5, true);
 
 
 --
--- TOC entry 3709 (class 0 OID 0)
+-- TOC entry 3727 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: inventario_id_inventario_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2244,7 +2330,7 @@ SELECT pg_catalog.setval('public.inventario_id_inventario_seq', 5, true);
 
 
 --
--- TOC entry 3710 (class 0 OID 0)
+-- TOC entry 3728 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: libro_autor_id_libro_autor_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2253,7 +2339,7 @@ SELECT pg_catalog.setval('public.libro_autor_id_libro_autor_seq', 5, true);
 
 
 --
--- TOC entry 3711 (class 0 OID 0)
+-- TOC entry 3729 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: libro_id_libro_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2262,16 +2348,16 @@ SELECT pg_catalog.setval('public.libro_id_libro_seq', 5, true);
 
 
 --
--- TOC entry 3712 (class 0 OID 0)
+-- TOC entry 3730 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: multa_id_multa_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
 
-SELECT pg_catalog.setval('public.multa_id_multa_seq', 5, true);
+SELECT pg_catalog.setval('public.multa_id_multa_seq', 7, true);
 
 
 --
--- TOC entry 3713 (class 0 OID 0)
+-- TOC entry 3731 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: persona_id_persona_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2280,7 +2366,7 @@ SELECT pg_catalog.setval('public.persona_id_persona_seq', 5, true);
 
 
 --
--- TOC entry 3714 (class 0 OID 0)
+-- TOC entry 3732 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: personal_biblioteca_id_personal_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2289,16 +2375,16 @@ SELECT pg_catalog.setval('public.personal_biblioteca_id_personal_seq', 5, true);
 
 
 --
--- TOC entry 3715 (class 0 OID 0)
+-- TOC entry 3733 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: prestamo_id_prestamo_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
 
-SELECT pg_catalog.setval('public.prestamo_id_prestamo_seq', 5, true);
+SELECT pg_catalog.setval('public.prestamo_id_prestamo_seq', 10, true);
 
 
 --
--- TOC entry 3716 (class 0 OID 0)
+-- TOC entry 3734 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: reserva_id_reserva_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2307,7 +2393,7 @@ SELECT pg_catalog.setval('public.reserva_id_reserva_seq', 5, true);
 
 
 --
--- TOC entry 3717 (class 0 OID 0)
+-- TOC entry 3735 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: socio_id_socio_seq; Type: SEQUENCE SET; Schema: public; Owner: grupo2
 --
@@ -2316,7 +2402,7 @@ SELECT pg_catalog.setval('public.socio_id_socio_seq', 5, true);
 
 
 --
--- TOC entry 3449 (class 2606 OID 58388)
+-- TOC entry 3450 (class 2606 OID 58388)
 -- Name: auditoria_general auditoria_general_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2325,7 +2411,7 @@ ALTER TABLE ONLY public.auditoria_general
 
 
 --
--- TOC entry 3403 (class 2606 OID 58228)
+-- TOC entry 3404 (class 2606 OID 58228)
 -- Name: autor autor_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2334,7 +2420,7 @@ ALTER TABLE ONLY public.autor
 
 
 --
--- TOC entry 3400 (class 2606 OID 58221)
+-- TOC entry 3401 (class 2606 OID 58221)
 -- Name: categoria categoria_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2343,7 +2429,7 @@ ALTER TABLE ONLY public.categoria
 
 
 --
--- TOC entry 3417 (class 2606 OID 58275)
+-- TOC entry 3418 (class 2606 OID 58275)
 -- Name: copia copia_codigo_barra_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2352,7 +2438,7 @@ ALTER TABLE ONLY public.copia
 
 
 --
--- TOC entry 3419 (class 2606 OID 58273)
+-- TOC entry 3420 (class 2606 OID 58273)
 -- Name: copia copia_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2361,7 +2447,7 @@ ALTER TABLE ONLY public.copia
 
 
 --
--- TOC entry 3431 (class 2606 OID 58321)
+-- TOC entry 3432 (class 2606 OID 58321)
 -- Name: devolucion devolucion_id_prestamo_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2370,7 +2456,7 @@ ALTER TABLE ONLY public.devolucion
 
 
 --
--- TOC entry 3433 (class 2606 OID 58319)
+-- TOC entry 3434 (class 2606 OID 58319)
 -- Name: devolucion devolucion_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2379,7 +2465,7 @@ ALTER TABLE ONLY public.devolucion
 
 
 --
--- TOC entry 3397 (class 2606 OID 58212)
+-- TOC entry 3398 (class 2606 OID 58212)
 -- Name: editorial editorial_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2388,7 +2474,7 @@ ALTER TABLE ONLY public.editorial
 
 
 --
--- TOC entry 3445 (class 2606 OID 58367)
+-- TOC entry 3446 (class 2606 OID 58367)
 -- Name: historial_prestamo historial_prestamo_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2397,7 +2483,7 @@ ALTER TABLE ONLY public.historial_prestamo
 
 
 --
--- TOC entry 3423 (class 2606 OID 58290)
+-- TOC entry 3424 (class 2606 OID 58290)
 -- Name: inventario inventario_id_libro_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2406,7 +2492,7 @@ ALTER TABLE ONLY public.inventario
 
 
 --
--- TOC entry 3425 (class 2606 OID 58288)
+-- TOC entry 3426 (class 2606 OID 58288)
 -- Name: inventario inventario_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2415,7 +2501,7 @@ ALTER TABLE ONLY public.inventario
 
 
 --
--- TOC entry 3413 (class 2606 OID 58254)
+-- TOC entry 3414 (class 2606 OID 58254)
 -- Name: libro_autor libro_autor_id_libro_id_autor_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2424,7 +2510,7 @@ ALTER TABLE ONLY public.libro_autor
 
 
 --
--- TOC entry 3415 (class 2606 OID 58252)
+-- TOC entry 3416 (class 2606 OID 58252)
 -- Name: libro_autor libro_autor_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2433,7 +2519,7 @@ ALTER TABLE ONLY public.libro_autor
 
 
 --
--- TOC entry 3409 (class 2606 OID 58235)
+-- TOC entry 3410 (class 2606 OID 58235)
 -- Name: libro libro_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2442,7 +2528,7 @@ ALTER TABLE ONLY public.libro
 
 
 --
--- TOC entry 3443 (class 2606 OID 58353)
+-- TOC entry 3444 (class 2606 OID 58353)
 -- Name: multa multa_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2451,7 +2537,7 @@ ALTER TABLE ONLY public.multa
 
 
 --
--- TOC entry 3383 (class 2606 OID 58177)
+-- TOC entry 3384 (class 2606 OID 58177)
 -- Name: persona persona_correo_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2460,7 +2546,7 @@ ALTER TABLE ONLY public.persona
 
 
 --
--- TOC entry 3385 (class 2606 OID 58175)
+-- TOC entry 3386 (class 2606 OID 58175)
 -- Name: persona persona_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2469,7 +2555,7 @@ ALTER TABLE ONLY public.persona
 
 
 --
--- TOC entry 3393 (class 2606 OID 58200)
+-- TOC entry 3394 (class 2606 OID 58200)
 -- Name: personal_biblioteca personal_biblioteca_id_persona_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2478,7 +2564,7 @@ ALTER TABLE ONLY public.personal_biblioteca
 
 
 --
--- TOC entry 3395 (class 2606 OID 58198)
+-- TOC entry 3396 (class 2606 OID 58198)
 -- Name: personal_biblioteca personal_biblioteca_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2487,7 +2573,7 @@ ALTER TABLE ONLY public.personal_biblioteca
 
 
 --
--- TOC entry 3429 (class 2606 OID 58302)
+-- TOC entry 3430 (class 2606 OID 58302)
 -- Name: prestamo prestamo_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2496,7 +2582,7 @@ ALTER TABLE ONLY public.prestamo
 
 
 --
--- TOC entry 3439 (class 2606 OID 58333)
+-- TOC entry 3440 (class 2606 OID 58333)
 -- Name: reserva reserva_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2505,7 +2591,7 @@ ALTER TABLE ONLY public.reserva
 
 
 --
--- TOC entry 3388 (class 2606 OID 58186)
+-- TOC entry 3389 (class 2606 OID 58186)
 -- Name: socio socio_id_persona_key; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2514,7 +2600,7 @@ ALTER TABLE ONLY public.socio
 
 
 --
--- TOC entry 3390 (class 2606 OID 58184)
+-- TOC entry 3391 (class 2606 OID 58184)
 -- Name: socio socio_pkey; Type: CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2523,7 +2609,7 @@ ALTER TABLE ONLY public.socio
 
 
 --
--- TOC entry 3450 (class 1259 OID 58426)
+-- TOC entry 3451 (class 1259 OID 58426)
 -- Name: idx_auditoria_fecha; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2531,7 +2617,7 @@ CREATE INDEX idx_auditoria_fecha ON public.auditoria_general USING btree (fecha)
 
 
 --
--- TOC entry 3451 (class 1259 OID 58425)
+-- TOC entry 3452 (class 1259 OID 58425)
 -- Name: idx_auditoria_tabla; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2539,7 +2625,7 @@ CREATE INDEX idx_auditoria_tabla ON public.auditoria_general USING btree (tabla_
 
 
 --
--- TOC entry 3404 (class 1259 OID 58407)
+-- TOC entry 3405 (class 1259 OID 58407)
 -- Name: idx_autor_nombre; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2547,7 +2633,7 @@ CREATE INDEX idx_autor_nombre ON public.autor USING btree (nombre);
 
 
 --
--- TOC entry 3401 (class 1259 OID 58406)
+-- TOC entry 3402 (class 1259 OID 58406)
 -- Name: idx_categoria_nombre; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2555,7 +2641,7 @@ CREATE INDEX idx_categoria_nombre ON public.categoria USING btree (nombre);
 
 
 --
--- TOC entry 3420 (class 1259 OID 58414)
+-- TOC entry 3421 (class 1259 OID 58414)
 -- Name: idx_copia_estado; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2563,7 +2649,7 @@ CREATE INDEX idx_copia_estado ON public.copia USING btree (estado);
 
 
 --
--- TOC entry 3421 (class 1259 OID 58413)
+-- TOC entry 3422 (class 1259 OID 58413)
 -- Name: idx_copia_idlibro; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2571,7 +2657,7 @@ CREATE INDEX idx_copia_idlibro ON public.copia USING btree (id_libro);
 
 
 --
--- TOC entry 3434 (class 1259 OID 58417)
+-- TOC entry 3435 (class 1259 OID 58417)
 -- Name: idx_devolucion_idprestamo; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2579,7 +2665,7 @@ CREATE INDEX idx_devolucion_idprestamo ON public.devolucion USING btree (id_pres
 
 
 --
--- TOC entry 3398 (class 1259 OID 58405)
+-- TOC entry 3399 (class 1259 OID 58405)
 -- Name: idx_editorial_nombre; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2587,7 +2673,7 @@ CREATE INDEX idx_editorial_nombre ON public.editorial USING btree (nombre);
 
 
 --
--- TOC entry 3446 (class 1259 OID 58424)
+-- TOC entry 3447 (class 1259 OID 58424)
 -- Name: idx_historial_idcopia; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2595,7 +2681,7 @@ CREATE INDEX idx_historial_idcopia ON public.historial_prestamo USING btree (id_
 
 
 --
--- TOC entry 3447 (class 1259 OID 58423)
+-- TOC entry 3448 (class 1259 OID 58423)
 -- Name: idx_historial_idsocio; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2603,7 +2689,7 @@ CREATE INDEX idx_historial_idsocio ON public.historial_prestamo USING btree (id_
 
 
 --
--- TOC entry 3410 (class 1259 OID 58412)
+-- TOC entry 3411 (class 1259 OID 58412)
 -- Name: idx_libro_autor_idautor; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2611,7 +2697,7 @@ CREATE INDEX idx_libro_autor_idautor ON public.libro_autor USING btree (id_autor
 
 
 --
--- TOC entry 3411 (class 1259 OID 58411)
+-- TOC entry 3412 (class 1259 OID 58411)
 -- Name: idx_libro_autor_idlibro; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2619,7 +2705,7 @@ CREATE INDEX idx_libro_autor_idlibro ON public.libro_autor USING btree (id_libro
 
 
 --
--- TOC entry 3405 (class 1259 OID 58410)
+-- TOC entry 3406 (class 1259 OID 58410)
 -- Name: idx_libro_categoria; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2627,7 +2713,7 @@ CREATE INDEX idx_libro_categoria ON public.libro USING btree (id_categoria);
 
 
 --
--- TOC entry 3406 (class 1259 OID 58409)
+-- TOC entry 3407 (class 1259 OID 58409)
 -- Name: idx_libro_editorial; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2635,7 +2721,7 @@ CREATE INDEX idx_libro_editorial ON public.libro USING btree (id_editorial);
 
 
 --
--- TOC entry 3407 (class 1259 OID 58408)
+-- TOC entry 3408 (class 1259 OID 58408)
 -- Name: idx_libro_titulo; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2643,7 +2729,7 @@ CREATE INDEX idx_libro_titulo ON public.libro USING btree (titulo);
 
 
 --
--- TOC entry 3440 (class 1259 OID 58422)
+-- TOC entry 3441 (class 1259 OID 58422)
 -- Name: idx_multa_estado; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2651,7 +2737,7 @@ CREATE INDEX idx_multa_estado ON public.multa USING btree (estado);
 
 
 --
--- TOC entry 3441 (class 1259 OID 58421)
+-- TOC entry 3442 (class 1259 OID 58421)
 -- Name: idx_multa_idsocio; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2659,7 +2745,7 @@ CREATE INDEX idx_multa_idsocio ON public.multa USING btree (id_socio);
 
 
 --
--- TOC entry 3379 (class 1259 OID 58401)
+-- TOC entry 3380 (class 1259 OID 58401)
 -- Name: idx_persona_apellido; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2667,7 +2753,7 @@ CREATE INDEX idx_persona_apellido ON public.persona USING btree (apellido);
 
 
 --
--- TOC entry 3380 (class 1259 OID 58402)
+-- TOC entry 3381 (class 1259 OID 58402)
 -- Name: idx_persona_correo; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2675,7 +2761,7 @@ CREATE INDEX idx_persona_correo ON public.persona USING btree (correo);
 
 
 --
--- TOC entry 3381 (class 1259 OID 58400)
+-- TOC entry 3382 (class 1259 OID 58400)
 -- Name: idx_persona_nombre; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2683,7 +2769,7 @@ CREATE INDEX idx_persona_nombre ON public.persona USING btree (nombre);
 
 
 --
--- TOC entry 3391 (class 1259 OID 58404)
+-- TOC entry 3392 (class 1259 OID 58404)
 -- Name: idx_personal_rol; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2691,7 +2777,7 @@ CREATE INDEX idx_personal_rol ON public.personal_biblioteca USING btree (rol);
 
 
 --
--- TOC entry 3426 (class 1259 OID 58416)
+-- TOC entry 3427 (class 1259 OID 58416)
 -- Name: idx_prestamo_idcopia; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2699,7 +2785,7 @@ CREATE INDEX idx_prestamo_idcopia ON public.prestamo USING btree (id_copia);
 
 
 --
--- TOC entry 3427 (class 1259 OID 58415)
+-- TOC entry 3428 (class 1259 OID 58415)
 -- Name: idx_prestamo_idsocio; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2707,7 +2793,7 @@ CREATE INDEX idx_prestamo_idsocio ON public.prestamo USING btree (id_socio);
 
 
 --
--- TOC entry 3435 (class 1259 OID 58420)
+-- TOC entry 3436 (class 1259 OID 58420)
 -- Name: idx_reserva_estado; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2715,7 +2801,7 @@ CREATE INDEX idx_reserva_estado ON public.reserva USING btree (estado);
 
 
 --
--- TOC entry 3436 (class 1259 OID 58419)
+-- TOC entry 3437 (class 1259 OID 58419)
 -- Name: idx_reserva_idcopia; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2723,7 +2809,7 @@ CREATE INDEX idx_reserva_idcopia ON public.reserva USING btree (id_copia);
 
 
 --
--- TOC entry 3437 (class 1259 OID 58418)
+-- TOC entry 3438 (class 1259 OID 58418)
 -- Name: idx_reserva_idsocio; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2731,7 +2817,7 @@ CREATE INDEX idx_reserva_idsocio ON public.reserva USING btree (id_socio);
 
 
 --
--- TOC entry 3386 (class 1259 OID 58403)
+-- TOC entry 3387 (class 1259 OID 58403)
 -- Name: idx_socio_tipo; Type: INDEX; Schema: public; Owner: grupo2
 --
 
@@ -2739,7 +2825,7 @@ CREATE INDEX idx_socio_tipo ON public.socio USING btree (tipo_socio);
 
 
 --
--- TOC entry 3471 (class 2620 OID 58499)
+-- TOC entry 3473 (class 2620 OID 58499)
 -- Name: autor trg_auditoria_autor; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2747,7 +2833,7 @@ CREATE TRIGGER trg_auditoria_autor AFTER INSERT OR DELETE OR UPDATE ON public.au
 
 
 --
--- TOC entry 3470 (class 2620 OID 58498)
+-- TOC entry 3472 (class 2620 OID 58498)
 -- Name: categoria trg_auditoria_categoria; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2755,7 +2841,7 @@ CREATE TRIGGER trg_auditoria_categoria AFTER INSERT OR DELETE OR UPDATE ON publi
 
 
 --
--- TOC entry 3473 (class 2620 OID 58495)
+-- TOC entry 3475 (class 2620 OID 58495)
 -- Name: copia trg_auditoria_copia; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2763,7 +2849,7 @@ CREATE TRIGGER trg_auditoria_copia AFTER INSERT OR DELETE OR UPDATE ON public.co
 
 
 --
--- TOC entry 3469 (class 2620 OID 58497)
+-- TOC entry 3471 (class 2620 OID 58497)
 -- Name: editorial trg_auditoria_editorial; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2771,7 +2857,7 @@ CREATE TRIGGER trg_auditoria_editorial AFTER INSERT OR DELETE OR UPDATE ON publi
 
 
 --
--- TOC entry 3477 (class 2620 OID 58496)
+-- TOC entry 3479 (class 2620 OID 58496)
 -- Name: historial_prestamo trg_auditoria_historial_prestamo; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2779,7 +2865,7 @@ CREATE TRIGGER trg_auditoria_historial_prestamo AFTER INSERT OR DELETE OR UPDATE
 
 
 --
--- TOC entry 3472 (class 2620 OID 58492)
+-- TOC entry 3474 (class 2620 OID 58492)
 -- Name: libro trg_auditoria_libro; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2787,7 +2873,7 @@ CREATE TRIGGER trg_auditoria_libro AFTER INSERT OR DELETE OR UPDATE ON public.li
 
 
 --
--- TOC entry 3476 (class 2620 OID 58494)
+-- TOC entry 3478 (class 2620 OID 58494)
 -- Name: multa trg_auditoria_multa; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2795,7 +2881,7 @@ CREATE TRIGGER trg_auditoria_multa AFTER INSERT OR DELETE OR UPDATE ON public.mu
 
 
 --
--- TOC entry 3474 (class 2620 OID 58490)
+-- TOC entry 3476 (class 2620 OID 58490)
 -- Name: prestamo trg_auditoria_prestamo; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2803,7 +2889,7 @@ CREATE TRIGGER trg_auditoria_prestamo AFTER INSERT OR DELETE OR UPDATE ON public
 
 
 --
--- TOC entry 3475 (class 2620 OID 58493)
+-- TOC entry 3477 (class 2620 OID 58493)
 -- Name: reserva trg_auditoria_reserva; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2811,7 +2897,7 @@ CREATE TRIGGER trg_auditoria_reserva AFTER INSERT OR DELETE OR UPDATE ON public.
 
 
 --
--- TOC entry 3468 (class 2620 OID 58491)
+-- TOC entry 3470 (class 2620 OID 58491)
 -- Name: socio trg_auditoria_socio; Type: TRIGGER; Schema: public; Owner: grupo2
 --
 
@@ -2819,7 +2905,7 @@ CREATE TRIGGER trg_auditoria_socio AFTER INSERT OR DELETE OR UPDATE ON public.so
 
 
 --
--- TOC entry 3458 (class 2606 OID 58276)
+-- TOC entry 3459 (class 2606 OID 58276)
 -- Name: copia copia_id_libro_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2828,7 +2914,7 @@ ALTER TABLE ONLY public.copia
 
 
 --
--- TOC entry 3462 (class 2606 OID 58322)
+-- TOC entry 3463 (class 2606 OID 58322)
 -- Name: devolucion devolucion_id_prestamo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2837,7 +2923,7 @@ ALTER TABLE ONLY public.devolucion
 
 
 --
--- TOC entry 3466 (class 2606 OID 58373)
+-- TOC entry 3468 (class 2606 OID 58373)
 -- Name: historial_prestamo historial_prestamo_id_copia_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2846,7 +2932,7 @@ ALTER TABLE ONLY public.historial_prestamo
 
 
 --
--- TOC entry 3467 (class 2606 OID 58368)
+-- TOC entry 3469 (class 2606 OID 58368)
 -- Name: historial_prestamo historial_prestamo_id_socio_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2855,7 +2941,7 @@ ALTER TABLE ONLY public.historial_prestamo
 
 
 --
--- TOC entry 3459 (class 2606 OID 58291)
+-- TOC entry 3460 (class 2606 OID 58291)
 -- Name: inventario inventario_id_libro_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2864,7 +2950,7 @@ ALTER TABLE ONLY public.inventario
 
 
 --
--- TOC entry 3456 (class 2606 OID 58260)
+-- TOC entry 3457 (class 2606 OID 58260)
 -- Name: libro_autor libro_autor_id_autor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2873,7 +2959,7 @@ ALTER TABLE ONLY public.libro_autor
 
 
 --
--- TOC entry 3457 (class 2606 OID 58255)
+-- TOC entry 3458 (class 2606 OID 58255)
 -- Name: libro_autor libro_autor_id_libro_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2882,7 +2968,7 @@ ALTER TABLE ONLY public.libro_autor
 
 
 --
--- TOC entry 3454 (class 2606 OID 58241)
+-- TOC entry 3455 (class 2606 OID 58241)
 -- Name: libro libro_id_categoria_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2891,7 +2977,7 @@ ALTER TABLE ONLY public.libro
 
 
 --
--- TOC entry 3455 (class 2606 OID 58236)
+-- TOC entry 3456 (class 2606 OID 58236)
 -- Name: libro libro_id_editorial_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2900,7 +2986,16 @@ ALTER TABLE ONLY public.libro
 
 
 --
--- TOC entry 3465 (class 2606 OID 58354)
+-- TOC entry 3466 (class 2606 OID 58516)
+-- Name: multa multa_id_prestamo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
+--
+
+ALTER TABLE ONLY public.multa
+    ADD CONSTRAINT multa_id_prestamo_fkey FOREIGN KEY (id_prestamo) REFERENCES public.prestamo(id_prestamo) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 3467 (class 2606 OID 58354)
 -- Name: multa multa_id_socio_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2909,7 +3004,7 @@ ALTER TABLE ONLY public.multa
 
 
 --
--- TOC entry 3453 (class 2606 OID 58201)
+-- TOC entry 3454 (class 2606 OID 58201)
 -- Name: personal_biblioteca personal_biblioteca_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2918,7 +3013,7 @@ ALTER TABLE ONLY public.personal_biblioteca
 
 
 --
--- TOC entry 3460 (class 2606 OID 58308)
+-- TOC entry 3461 (class 2606 OID 58308)
 -- Name: prestamo prestamo_id_copia_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2927,7 +3022,7 @@ ALTER TABLE ONLY public.prestamo
 
 
 --
--- TOC entry 3461 (class 2606 OID 58303)
+-- TOC entry 3462 (class 2606 OID 58303)
 -- Name: prestamo prestamo_id_socio_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2936,7 +3031,7 @@ ALTER TABLE ONLY public.prestamo
 
 
 --
--- TOC entry 3463 (class 2606 OID 58339)
+-- TOC entry 3464 (class 2606 OID 58339)
 -- Name: reserva reserva_id_copia_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2945,7 +3040,7 @@ ALTER TABLE ONLY public.reserva
 
 
 --
--- TOC entry 3464 (class 2606 OID 58334)
+-- TOC entry 3465 (class 2606 OID 58334)
 -- Name: reserva reserva_id_socio_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2954,7 +3049,7 @@ ALTER TABLE ONLY public.reserva
 
 
 --
--- TOC entry 3452 (class 2606 OID 58187)
+-- TOC entry 3453 (class 2606 OID 58187)
 -- Name: socio socio_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: grupo2
 --
 
@@ -2963,209 +3058,363 @@ ALTER TABLE ONLY public.socio
 
 
 --
--- TOC entry 3665 (class 0 OID 0)
+-- TOC entry 3667 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: TABLE auditoria_general; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auditoria_general TO administrador;
-
-
---
--- TOC entry 3667 (class 0 OID 0)
--- Dependencies: 228
--- Name: TABLE autor; Type: ACL; Schema: public; Owner: grupo2
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.autor TO administrador;
+GRANT ALL ON TABLE public.auditoria_general TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auditoria_general TO bibliotecario_rol;
 
 
 --
 -- TOC entry 3669 (class 0 OID 0)
--- Dependencies: 226
--- Name: TABLE categoria; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 247
+-- Name: SEQUENCE auditoria_general_id_auditoria_seq; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.categoria TO administrador;
+GRANT ALL ON SEQUENCE public.auditoria_general_id_auditoria_seq TO admin_rol;
 
 
 --
--- TOC entry 3671 (class 0 OID 0)
--- Dependencies: 234
--- Name: TABLE copia; Type: ACL; Schema: public; Owner: grupo2
+-- TOC entry 3670 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: TABLE autor; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.copia TO administrador;
-GRANT SELECT,UPDATE ON TABLE public.copia TO bibliotecario;
-GRANT SELECT ON TABLE public.copia TO socio;
+GRANT ALL ON TABLE public.autor TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.autor TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3672 (class 0 OID 0)
+-- Dependencies: 227
+-- Name: SEQUENCE autor_id_autor_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.autor_id_autor_seq TO admin_rol;
 
 
 --
 -- TOC entry 3673 (class 0 OID 0)
--- Dependencies: 240
--- Name: TABLE devolucion; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 226
+-- Name: TABLE categoria; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.devolucion TO administrador;
-GRANT SELECT,UPDATE ON TABLE public.devolucion TO bibliotecario;
+GRANT ALL ON TABLE public.categoria TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.categoria TO bibliotecario_rol;
+GRANT SELECT ON TABLE public.categoria TO socio_rol;
 
 
 --
 -- TOC entry 3675 (class 0 OID 0)
--- Dependencies: 224
--- Name: TABLE editorial; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 225
+-- Name: SEQUENCE categoria_id_categoria_seq; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.editorial TO administrador;
+GRANT ALL ON SEQUENCE public.categoria_id_categoria_seq TO admin_rol;
 
 
 --
--- TOC entry 3677 (class 0 OID 0)
--- Dependencies: 246
--- Name: TABLE historial_prestamo; Type: ACL; Schema: public; Owner: grupo2
+-- TOC entry 3676 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: TABLE copia; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.historial_prestamo TO administrador;
+GRANT ALL ON TABLE public.copia TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.copia TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3678 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: SEQUENCE copia_id_copia_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.copia_id_copia_seq TO admin_rol;
 
 
 --
 -- TOC entry 3679 (class 0 OID 0)
--- Dependencies: 236
--- Name: TABLE inventario; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 240
+-- Name: TABLE devolucion; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.inventario TO administrador;
+GRANT ALL ON TABLE public.devolucion TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.devolucion TO bibliotecario_rol;
 
 
 --
 -- TOC entry 3681 (class 0 OID 0)
--- Dependencies: 230
--- Name: TABLE libro; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 239
+-- Name: SEQUENCE devolucion_id_devolucion_seq; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.libro TO administrador;
-GRANT SELECT,UPDATE ON TABLE public.libro TO bibliotecario;
-GRANT SELECT ON TABLE public.libro TO socio;
+GRANT ALL ON SEQUENCE public.devolucion_id_devolucion_seq TO admin_rol;
 
 
 --
 -- TOC entry 3682 (class 0 OID 0)
--- Dependencies: 232
--- Name: TABLE libro_autor; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 224
+-- Name: TABLE editorial; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.libro_autor TO administrador;
+GRANT ALL ON TABLE public.editorial TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.editorial TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3684 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: SEQUENCE editorial_id_editorial_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.editorial_id_editorial_seq TO admin_rol;
 
 
 --
 -- TOC entry 3685 (class 0 OID 0)
--- Dependencies: 244
--- Name: TABLE multa; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 246
+-- Name: TABLE historial_prestamo; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.multa TO administrador;
+GRANT ALL ON TABLE public.historial_prestamo TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.historial_prestamo TO bibliotecario_rol;
 
 
 --
 -- TOC entry 3687 (class 0 OID 0)
--- Dependencies: 218
--- Name: TABLE persona; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 245
+-- Name: SEQUENCE historial_prestamo_id_historial_seq; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.persona TO administrador;
+GRANT ALL ON SEQUENCE public.historial_prestamo_id_historial_seq TO admin_rol;
 
 
 --
--- TOC entry 3689 (class 0 OID 0)
--- Dependencies: 222
--- Name: TABLE personal_biblioteca; Type: ACL; Schema: public; Owner: grupo2
+-- TOC entry 3688 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: TABLE inventario; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.personal_biblioteca TO administrador;
+GRANT ALL ON TABLE public.inventario TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.inventario TO bibliotecario_rol;
+GRANT SELECT ON TABLE public.inventario TO socio_rol;
+
+
+--
+-- TOC entry 3690 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: SEQUENCE inventario_id_inventario_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.inventario_id_inventario_seq TO admin_rol;
 
 
 --
 -- TOC entry 3691 (class 0 OID 0)
--- Dependencies: 238
--- Name: TABLE prestamo; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 230
+-- Name: TABLE libro; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prestamo TO administrador;
-GRANT SELECT,UPDATE ON TABLE public.prestamo TO bibliotecario;
-
-
---
--- TOC entry 3693 (class 0 OID 0)
--- Dependencies: 242
--- Name: TABLE reserva; Type: ACL; Schema: public; Owner: grupo2
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.reserva TO administrador;
+GRANT ALL ON TABLE public.libro TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.libro TO bibliotecario_rol;
+GRANT SELECT ON TABLE public.libro TO socio_rol;
 
 
 --
--- TOC entry 3695 (class 0 OID 0)
--- Dependencies: 220
--- Name: TABLE socio; Type: ACL; Schema: public; Owner: grupo2
+-- TOC entry 3692 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: TABLE libro_autor; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.socio TO administrador;
+GRANT ALL ON TABLE public.libro_autor TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.libro_autor TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3694 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: SEQUENCE libro_autor_id_libro_autor_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.libro_autor_id_libro_autor_seq TO admin_rol;
+
+
+--
+-- TOC entry 3696 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: SEQUENCE libro_id_libro_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.libro_id_libro_seq TO admin_rol;
 
 
 --
 -- TOC entry 3697 (class 0 OID 0)
--- Dependencies: 251
--- Name: TABLE vista_copias_disponibles_por_titulo; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 244
+-- Name: TABLE multa; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_copias_disponibles_por_titulo TO administrador;
-
-
---
--- TOC entry 3698 (class 0 OID 0)
--- Dependencies: 253
--- Name: TABLE vista_historial_prestamos_por_socio; Type: ACL; Schema: public; Owner: grupo2
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_historial_prestamos_por_socio TO administrador;
+GRANT ALL ON TABLE public.multa TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.multa TO bibliotecario_rol;
 
 
 --
 -- TOC entry 3699 (class 0 OID 0)
--- Dependencies: 249
--- Name: TABLE vista_libros_prestados; Type: ACL; Schema: public; Owner: grupo2
+-- Dependencies: 243
+-- Name: SEQUENCE multa_id_multa_seq; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_libros_prestados TO administrador;
+GRANT ALL ON SEQUENCE public.multa_id_multa_seq TO admin_rol;
 
 
 --
 -- TOC entry 3700 (class 0 OID 0)
+-- Dependencies: 218
+-- Name: TABLE persona; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.persona TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.persona TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3702 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: SEQUENCE persona_id_persona_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.persona_id_persona_seq TO admin_rol;
+
+
+--
+-- TOC entry 3703 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: TABLE personal_biblioteca; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.personal_biblioteca TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.personal_biblioteca TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3705 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: SEQUENCE personal_biblioteca_id_personal_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.personal_biblioteca_id_personal_seq TO admin_rol;
+
+
+--
+-- TOC entry 3706 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: TABLE prestamo; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.prestamo TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prestamo TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3708 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: SEQUENCE prestamo_id_prestamo_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.prestamo_id_prestamo_seq TO admin_rol;
+
+
+--
+-- TOC entry 3709 (class 0 OID 0)
+-- Dependencies: 242
+-- Name: TABLE reserva; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.reserva TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.reserva TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3711 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: SEQUENCE reserva_id_reserva_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.reserva_id_reserva_seq TO admin_rol;
+
+
+--
+-- TOC entry 3712 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: TABLE socio; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.socio TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.socio TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3714 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: SEQUENCE socio_id_socio_seq; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON SEQUENCE public.socio_id_socio_seq TO admin_rol;
+
+
+--
+-- TOC entry 3715 (class 0 OID 0)
+-- Dependencies: 251
+-- Name: TABLE vista_copias_disponibles_por_titulo; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.vista_copias_disponibles_por_titulo TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_copias_disponibles_por_titulo TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3716 (class 0 OID 0)
+-- Dependencies: 253
+-- Name: TABLE vista_historial_prestamos_por_socio; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.vista_historial_prestamos_por_socio TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_historial_prestamos_por_socio TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3717 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: TABLE vista_libros_prestados; Type: ACL; Schema: public; Owner: grupo2
+--
+
+GRANT ALL ON TABLE public.vista_libros_prestados TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_libros_prestados TO bibliotecario_rol;
+
+
+--
+-- TOC entry 3718 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: TABLE vista_reservas_activas; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_reservas_activas TO administrador;
+GRANT ALL ON TABLE public.vista_reservas_activas TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_reservas_activas TO bibliotecario_rol;
 
 
 --
--- TOC entry 3701 (class 0 OID 0)
+-- TOC entry 3719 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: TABLE vista_socios_con_multas_pendientes; Type: ACL; Schema: public; Owner: grupo2
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_socios_con_multas_pendientes TO administrador;
+GRANT ALL ON TABLE public.vista_socios_con_multas_pendientes TO admin_rol;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vista_socios_con_multas_pendientes TO bibliotecario_rol;
 
 
---
--- TOC entry 2192 (class 826 OID 58393)
--- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: grupo2
---
-
-ALTER DEFAULT PRIVILEGES FOR ROLE grupo2 IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO administrador;
-
-
--- Completed on 2025-04-29 00:54:53 UTC
+-- Completed on 2025-05-01 17:23:10 UTC
 
 --
 -- PostgreSQL database dump complete
