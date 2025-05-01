@@ -53,3 +53,9 @@ SELECT * FROM obtener_historial_completo(1);
 -- Usar la función contar_prestamos_libro
 SELECT contar_prestamos_libro(2) AS total_prestamos_libro;
 -- Esta función debe contar el número total de préstamos del libro con id_libro = 2.
+
+--generar multas:
+SELECT generar_multas_por_retraso()
+-- eliminar multa y prestamo
+SELECT eliminar_multa_y_prestamo(7);
+

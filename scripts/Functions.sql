@@ -220,3 +220,59 @@ BEGIN
     RETURN NULL;
 END;
 $$;
+
+-- generar multas por retraso:
+
+CREATE OR REPLACE FUNCTION generar_multas_por_retraso()
+RETURNS VOID AS $$
+DECLARE
+    prestamo_rec RECORD;
+    dias_retraso INT;
+BEGIN
+    FOR prestamo_rec IN
+        SELECT p.id_prestamo, p.id_socio, p.fecha_devolucion_esperada
+        FROM prestamo p
+        LEFT JOIN devolucion d ON p.id_prestamo = d.id_prestamo
+        WHERE d.id_prestamo IS NULL
+    LOOP
+        dias_retraso := EXTRACT(DAY FROM CURRENT_DATE - prestamo_rec.fecha_devolucion_esperada);
+        
+        IF dias_retraso > 5 THEN
+            -- Verifica si ya existe una multa para ese préstamo
+            IF NOT EXISTS (
+                SELECT 1 FROM multa
+                WHERE id_socio = prestamo_rec.id_socio
+                  AND motivo = 'Devolución tardía'
+                  AND fecha = CURRENT_DATE
+            ) THEN
+                INSERT INTO multa (id_socio, monto, motivo, fecha, estado)
+                VALUES (prestamo_rec.id_socio, dias_retraso * 1.00, 'Devolución tardía', CURRENT_DATE, 'Pendiente');
+            END IF;
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- elimiar prestamos y multas al mismo tiempo:
+
+CREATE OR REPLACE FUNCTION eliminar_multa_y_prestamo(prestamo_id INT)
+RETURNS VOID AS $$
+DECLARE
+    multa_rec RECORD;
+BEGIN
+    -- Eliminar la multa asociada al préstamo
+    FOR multa_rec IN
+        SELECT m.id_multa, m.id_prestamo
+        FROM multa m
+        WHERE m.id_prestamo = prestamo_id  -- Usamos la nueva variable prestamo_id
+    LOOP
+        -- Eliminar la multa
+        DELETE FROM multa WHERE id_multa = multa_rec.id_multa;
+    END LOOP;
+
+    -- Eliminar el préstamo
+    DELETE FROM prestamo WHERE id_prestamo = prestamo_id; -- Usamos la nueva variable prestamo_id
+       
+END;
+$$ LANGUAGE plpgsql;
