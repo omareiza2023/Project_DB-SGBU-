@@ -96,4 +96,10 @@ CREATE TRIGGER trg_auditoria_personal_biblioteca
 AFTER INSERT OR UPDATE OR DELETE ON personal_biblioteca
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
-
+                    ______
+  __  __   _    _   _   _   _____   ______ _________
+ |  \/  | | |  | | | \ | | | ____| | ____| |   __   |
+ |      | | |  | | |  \| | | |___  | |     |  |  |  |   linda 
+ | |\/| | | |  | | |     | |  ___| | |     |  |__|  |      
+ | |  | | | |__| | | |\  | | |___  | |___  |   ___  |
+ |_|  |_|  \____/  |_| \_| |_____| |_____| |__|   |_|
