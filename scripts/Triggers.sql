@@ -39,62 +39,76 @@ END;
 $$;
 
 -- 2. Trigger para cada tabla (Prestamo, Socio, Libro, Reserva, etc...)
+-- Registra auditoría cuando se crea, actualiza o elimina un préstamo.
 CREATE TRIGGER trg_auditoria_prestamo
 AFTER INSERT OR UPDATE OR DELETE ON prestamo
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Guarda cambios realizados sobre los datos de un socio.
 CREATE TRIGGER trg_auditoria_socio
 AFTER INSERT OR UPDATE OR DELETE ON socio
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Monitorea inserciones, modificaciones o eliminaciones de libros.
 CREATE TRIGGER trg_auditoria_libro
 AFTER INSERT OR UPDATE OR DELETE ON libro
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Registra actividades sobre reservas hechas por los socios.
 CREATE TRIGGER trg_auditoria_reserva
 AFTER INSERT OR UPDATE OR DELETE ON reserva
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Audita operaciones sobre multas asignadas.
 CREATE TRIGGER trg_auditoria_multa
 AFTER INSERT OR UPDATE OR DELETE ON multa
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Detecta cambios en copias físicas de los libros.
 CREATE TRIGGER trg_auditoria_copia
 AFTER INSERT OR UPDATE OR DELETE ON copia
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Guarda alteraciones en el historial de préstamos.
 CREATE TRIGGER trg_auditoria_historial_prestamo
 AFTER INSERT OR UPDATE OR DELETE ON historial_prestamo
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Audita registros de editoriales agregadas o modificadas.
 CREATE TRIGGER trg_auditoria_editorial
 AFTER INSERT OR UPDATE OR DELETE ON editorial
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Registra operaciones sobre categorías de libros.
 CREATE TRIGGER trg_auditoria_categoria
 AFTER INSERT OR UPDATE OR DELETE ON categoria
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Monitorea inserciones, ediciones o eliminaciones de autores.
 CREATE TRIGGER trg_auditoria_autor
 AFTER INSERT OR UPDATE OR DELETE ON autor
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
-----
+-- Guarda auditoría de devoluciones de libros.
 CREATE TRIGGER trg_auditoria_devolucion
 AFTER INSERT OR UPDATE OR DELETE ON devolucion
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Registra cambios en la relación entre libros y autores.
 CREATE TRIGGER trg_auditoria_libro_autor
 AFTER INSERT OR UPDATE OR DELETE ON libro_autor
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Monitorea cambios en el stock de libros (inventario).
 CREATE TRIGGER trg_auditoria_inventario
 AFTER INSERT OR UPDATE OR DELETE ON inventario
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+-- Audita acciones sobre los registros del personal de biblioteca.
 CREATE TRIGGER trg_auditoria_personal_biblioteca
 AFTER INSERT OR UPDATE OR DELETE ON personal_biblioteca
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
+
 
                     ______
   __  __   _    _   _   _   _____   ______ _________     ___       __   _     _  _______     ________
