@@ -79,3 +79,21 @@ CREATE TRIGGER trg_auditoria_autor
 AFTER INSERT OR UPDATE OR DELETE ON autor
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
 
+----
+CREATE TRIGGER trg_auditoria_devolucion
+AFTER INSERT OR UPDATE OR DELETE ON devolucion
+FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
+
+CREATE TRIGGER trg_auditoria_libro_autor
+AFTER INSERT OR UPDATE OR DELETE ON libro_autor
+FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
+
+CREATE TRIGGER trg_auditoria_inventario
+AFTER INSERT OR UPDATE OR DELETE ON inventario
+FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
+
+CREATE TRIGGER trg_auditoria_personal_biblioteca
+AFTER INSERT OR UPDATE OR DELETE ON personal_biblioteca
+FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();
+
+
