@@ -4,8 +4,8 @@
 CREATE INDEX idx_persona_nombre ON persona (nombre);
 CREATE INDEX idx_persona_apellido ON persona (apellido);
 CREATE INDEX idx_persona_correo ON persona (correo);
-CREATE INDEX idx_persona_nombre_apellido ON persona(nombre, apellido); -- Índice para mejorar búsquedas por nombre y apellido (por ejemplo, para filtros en búsquedas)
-CREATE INDEX idx_persona_telefono ON persona(telefono); -- Índice para búsquedas por teléfono (si se hacen con frecuencia)
+CREATE INDEX idx_persona_nombre_apellido ON persona(nombre, apellido); -- Índice para mejorar búsquedas por nombre y apellido (por ejemplo, para filtros en búsquedas).
+CREATE INDEX idx_persona_telefono ON persona(telefono); -- Índice para búsquedas por teléfono (si se hacen con frecuencia).
 
 -- Tabla socio
 CREATE INDEX idx_socio_tipo ON socio (tipo_socio);

@@ -38,7 +38,7 @@ BEGIN
 END;
 $$;
 
--- 2. Trigger para cada tabla (Prestamo, Socio, Libro, Reserva, etc.)
+-- 2. Trigger para cada tabla (Prestamo, Socio, Libro, Reserva, etc...)
 CREATE TRIGGER trg_auditoria_prestamo
 AFTER INSERT OR UPDATE OR DELETE ON prestamo
 FOR EACH ROW EXECUTE FUNCTION fn_auditoria_general();

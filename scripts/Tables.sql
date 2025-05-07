@@ -121,7 +121,7 @@ CREATE TABLE historial_prestamo (
     observaciones TEXT
 );
 
--- 16. Tabla auditoria_general
+-- 16. Tabla auditoria_general.
 CREATE TABLE auditoria_general (
     id_auditoria SERIAL PRIMARY KEY,
     tabla_afectada TEXT NOT NULL,
