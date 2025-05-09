@@ -29,38 +29,60 @@ SELECT
 FROM libros_con_copias lc
 INNER JOIN libro l ON lc.id_libro = l.id_libro
 WHERE lc.copias_disponibles >= 2;
+-- ----------------------------------------------------------------
+-- consulta normal:
+SELECT 
+    DISTINCT s.tipo_socio,
+    (
+        SELECT COUNT(p.id_prestamo)
+        FROM prestamo p
+        WHERE p.id_socio = s.id_socio
+    ) AS total_prestamos
+FROM socio s;
+-- consulta cte
+
+-- Consultas basica
+SELECT 
+    p.id_prestamo,
+    p.fecha_prestamo,
+    p.fecha_devolucion_esperada,
+    s.id_socio,
+    s.tipo_socio,
+    pr.nombre,
+    pr.apellido,
+    pr.correo
+FROM prestamo p
+INNER JOIN socio s ON p.id_socio = s.id_socio
+INNER JOIN persona pr ON s.id_persona = pr.id_persona
+WHERE p.fecha_devolucion_esperada > CURRENT_DATE;
 
 
--- 🔍 Total de préstamos por cada tipo de socio
-EXPLAIN ANALYZE
-WITH TotalPrestamos AS (
-    SELECT 
-        s.tipo_socio,
-        COUNT(p.id_prestamo) AS total_prestamos
-    FROM prestamo p
-    INNER JOIN socio s ON p.id_socio = s.id_socio
-    GROUP BY s.tipo_socio
-)
-SELECT * FROM TotalPrestamos;
+
 
 -- 🔍 Préstamos activos (aún no devueltos) y datos del socio
-EXPLAIN ANALYZE
+_
 WITH PrestamosActivos AS (
     SELECT 
         p.id_prestamo,
         p.fecha_prestamo,
         p.fecha_devolucion_esperada,
         s.id_socio,
-        s.tipo_socio,
         pr.nombre,
-        pr.apellido,
-        pr.correo
+        pr.apellido
     FROM prestamo p
     LEFT JOIN socio s ON p.id_socio = s.id_socio
     LEFT JOIN persona pr ON s.id_persona = pr.id_persona
     WHERE p.fecha_devolucion_esperada > NOW()::DATE
 )
-SELECT * FROM PrestamosActivos;
+
+SELECT 
+    id_prestamo, 
+    nombre, 
+    apellido, 
+    fecha_prestamo
+FROM PrestamosActivos;
+
+---------------------------------------------------------------------------------------------------
 
 -- 🔍 Libros en inventario y sus autores
 EXPLAIN ANALYZE
