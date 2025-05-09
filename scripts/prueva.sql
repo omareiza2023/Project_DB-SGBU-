@@ -42,7 +42,32 @@ FROM (
 ) s;
 
 
-ANALYZE libro;
-ANALYZE prestamo;
-ANALYZE socio;
+-- 🔹 CTE 5: Registros de auditoría en un intervalo de tiempo
+-- Explicación: Muestra todas las operaciones registradas en la tabla auditoria_general
+--              que se realizaron dentro de un intervalo de tiempo definido.
+
+
+-- Analizar la tabla "persona"
 ANALYZE persona;
+
+-- Analizar la tabla "socio"
+ANALYZE socio;
+
+-- Analizar la tabla "prestamo"
+ANALYZE prestamo;
+
+-- Analizar la tabla "reserva"
+ANALYZE reserva;
+
+-- Analizar la tabla "inventario"
+ANALYZE inventario;
+
+-- Analizar la tabla "libro"
+ANALYZE libro;
+
+-- Analizar la tabla "copia"
+ANALYZE copia;
+
+-- Analizar la tabla "auditoria_general"
+ANALYZE auditoria_general;
+

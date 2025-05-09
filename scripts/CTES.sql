@@ -93,5 +93,44 @@ WITH ReservasActivas AS (
     LEFT JOIN copia c ON r.id_copia = c.id_copia
     LEFT JOIN libro l ON c.id_libro = l.id_libro
     WHERE r.estado = 'Activa'
+
 )
 SELECT * FROM ReservasActivas LIMIT 100;
+
+
+EXPLAIN ANALYZE
+WITH AuditoriaPorFecha AS (
+    SELECT 
+        id_auditoria,
+        tabla_afectada,
+        operacion,
+        usuario,
+        fecha,
+        datos_anteriores,
+        datos_nuevos
+    FROM auditoria_general
+    WHERE fecha BETWEEN '2025-05-01 21:07:05.89707' AND '2025-05-07 21:00:00'
+)
+SELECT * FROM AuditoriaPorFecha LIMIT 100;
+
+-- ====================================================
+
+-- 🔹 CTE 6: Registros de auditoría en un día específico y rango de horas
+-- Explicación: Muestra todas las operaciones de auditoría de un día definido 
+--              y dentro de un intervalo de horas específico.
+EXPLAIN ANALYZE
+WITH AuditoriaPorHora AS (
+    SELECT 
+        id_auditoria,
+        tabla_afectada,
+        operacion,
+        usuario,
+        fecha,
+        datos_anteriores,
+        datos_nuevos
+    FROM auditoria_general
+    WHERE fecha::DATE = '2025-05-01'
+      AND fecha::TIME BETWEEN '21:00:00' AND '22:00:00'
+)
+SELECT * FROM AuditoriaPorHora LIMIT 100;
+""
